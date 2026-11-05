@@ -1,324 +1,233 @@
-# NFT Ticket DApp
+# NFT Ticket Claim
 
-A deliberately small Web3 learning project: deploy an ERC-721 smart contract to the
-Ethereum Sepolia testnet, connect a MetaMask wallet, and mint one free NFT ticket per
-wallet.
+A minimal React + Vite + ethers v6 DApp. Each wallet can claim one free ERC-721
+ticket. The contract enforces the rule; the page reads that rule back from the
+blockchain after connection, refresh, account changes and successful transactions.
+Minting requires network gas even though the ticket itself has no price.
 
-The repository avoids a backend, deployment framework, and advanced contract patterns so
-that the complete browser-to-blockchain flow stays visible.
+This project implements the tutorial `TicketNFT` example with a complete wallet
+interaction flow and local development/test tooling.
 
-> **What the NFT contains:** this starter records token IDs and ownership on-chain. It does
-> not include hosted artwork or token metadata. The ticket emoji belongs to the web UI,
-> not to the NFT itself.
+## Current deployment status
 
-## What you will learn
+The application is configured for the user's Sepolia TicketNFT deployment:
+[`0xff0923dbdb576fda451e77794cba1f8cb5d43fc9`](https://sepolia.etherscan.io/address/0xff0923dbdb576fda451e77794cba1f8cb5d43fc9).
+Read-only RPC checks confirmed contract code, the collection name/symbol, ERC-721
+support, claim queries and a successful mint simulation. Public-chain wallet
+approval and a real Sepolia mint remain manual verification steps.
 
-- what an ERC-721 NFT contract stores;
-- how Remix compiles and deploys Solidity;
-- how MetaMask exposes a wallet to a browser DApp;
-- why a frontend needs both a contract address and an ABI;
-- the difference between reading blockchain state and sending a transaction; and
-- how a mint moves from a button click to a confirmed Sepolia transaction.
+The default `npm run dev` targets Sepolia. This workspace's `.env` is configured;
+on a fresh checkout, copy `.env.example` to `.env` to use the same public deployment.
+Local mode is available without changing `.env`.
 
-## Web3 terms in plain English
+The page uses a compact responsive claim card, wallet eligibility and transaction
+feedback. On narrow screens, the primary action appears before the illustrative
+ticket. The illustration is a page graphic, not hosted NFT artwork. An in-app
+preview may have no wallet extension; open the same local URL in your MetaMask
+browser profile to connect and sign.
 
-| Term | Meaning in this project |
+## Requirements
+
+- Node.js **24 LTS** recommended (development checked with 24.15.0), npm.
+- MetaMask or another injected EIP-1193 desktop browser wallet for manual use.
+- For Sepolia: a small amount of Sepolia test ETH for deployment and mint gas.
+- For automated browser smoke tests only: Playwright's Chromium, or installed Chrome.
+
+Run all commands from the repository root. On Windows PowerShell, use `npm.cmd`
+if execution policy prevents `npm.ps1` from running.
+
+```powershell
+git clone https://github.com/jzjzzzzzzz/nft-ticket-dapp.git
+cd nft-ticket-dapp
+npm.cmd ci
+Copy-Item .env.example .env
+npm.cmd run dev
+```
+
+Open the local URL printed by Vite in the browser profile with MetaMask. The
+template already points to the public Sepolia deployment above. To check the
+source independently, run `npm.cmd test` and `npm.cmd run build`.
+
+## Deploy TicketNFT on Sepolia with Remix
+
+1. Open [Remix](https://remix.ethereum.org/) and create `TicketNFT.sol`.
+2. Copy the complete contents of `contracts/TicketNFT.sol` into it. Its import pins
+   OpenZeppelin **5.6.1** and works directly in Remix.
+3. Choose Solidity compiler **0.8.30**, EVM target **Cancun**, and enable optimizer
+   with **200 runs** to match the local compilation settings. Compile `TicketNFT`.
+4. In MetaMask select **Sepolia** and the account holding test ETH.
+5. In Remix's **Deploy & Run Transactions**, choose the browser extension/injected
+   wallet environment. Confirm chain ID **11155111**. A Remix VM deployment will
+   not be accessible to the frontend on Sepolia.
+6. Select **TicketNFT**. There are **no constructor arguments**; leave Value at **0**.
+7. Click Deploy and approve the transaction yourself in MetaMask.
+8. After confirmation, copy the deployed **contract address**, not the account
+   address or deployment transaction hash.
+
+Create your frontend configuration:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edit `.env`:
+
+```dotenv
+VITE_CONTRACT_ADDRESS=0xff0923dbdb576fda451e77794cba1f8cb5d43fc9
+VITE_CHAIN_ID=11155111
+```
+
+Replace that address if you deploy your own instance. These values are public; Vite includes
+`VITE_` variables in browser code. No private key, recovery phrase or wallet export
+is needed anywhere in this project.
+
+```powershell
+npm.cmd run dev
+```
+
+Open the URL printed by Vite in the browser profile with MetaMask. Restart Vite
+after changing `.env`. Connect the wallet, approve a network switch if requested,
+and click **Claim NFT**. Confirm the transaction in MetaMask. The page shows the
+submitted hash, waits for confirmation, displays the token ID and reloads eligibility.
+The Sepolia transaction link opens Etherscan.
+
+If a previous `.env.local` exists, its values override `.env`; remove its local-chain
+settings or update it before testing Sepolia. `dev:local` below creates neither file.
+
+## Run completely on a local development chain
+
+This checks real contract execution without requiring a public-network deployment.
+The local chain is temporary: restarting it clears deployments and tickets.
+
+Terminal 1, keep it running:
+
+```powershell
+npm.cmd run chain
+```
+
+Terminal 2:
+
+```powershell
+npm.cmd run deploy:local
+npm.cmd run dev:local
+```
+
+`deploy:local` only connects to `127.0.0.1:8545`, checks chain ID **31337** and
+the Hardhat node identity, uses an unlocked local development account, and saves
+the public address to `deployments/localhost.json`. It never reads a private key.
+`dev:local` reads that address and starts the page at `http://127.0.0.1:5173` using
+the local chain, without editing your Sepolia `.env`.
+
+For manual browser use, select/add the local Hardhat network (RPC
+`http://127.0.0.1:8545`, chain ID `31337`, currency `ETH`). The page can request this
+when you connect/switch. Use a **disposable, locally funded test account**. The local
+chain accounts printed by Hardhat are public development accounts; use them only
+on this temporary local chain. Alternatively, use the automated browser test below,
+which requires no wallet extension or account import.
+
+After restarting the chain, run `deploy:local` again and restart `dev:local`.
+If the port is already occupied, stop the earlier local server before restarting it.
+
+## Verification commands
+
+| Command | Checks or runs |
 | --- | --- |
-| **Smart contract** | A Solidity program deployed at an address on Ethereum. This contract decides who may mint and records NFT ownership. |
-| **Sepolia** | An Ethereum test network for application development. Its ETH has no real-world value, but transactions still use it as gas. |
-| **ERC-721** | The standard interface used by non-fungible tokens. Each token ID is unique and has one owner. This project inherits OpenZeppelin's ERC-721 implementation. |
-| **Wallet address** | The public account identifier selected in MetaMask, such as `0xabc...`. It is safe to share. |
-| **MetaMask** | The browser wallet that holds keys, asks the user for approval, and signs transactions. The DApp never receives the private key. |
-| **Contract address** | The public address of one deployed `TicketNFT` instance. Every new deployment gets a different address. It is not your wallet address or a transaction hash. |
-| **ABI** | The Application Binary Interface: a description of callable contract functions and events. ethers uses it to encode `mint()` and decode `hasMinted(...)`. |
-| **Provider** | The read connection to Ethereum. In this app, ethers wraps MetaMask's injected provider. Reads do not require gas. |
-| **Signer** | The connected wallet account used for state-changing transactions. MetaMask asks before the signer approves `mint()`. |
-| **Gas** | The network fee for computation. Minting is free in the contract, but deploying and minting still require a small amount of testnet ETH for gas. |
-| **Mint** | Creating a new NFT. Here, `mint()` assigns the next token ID to `msg.sender` and marks that wallet as having minted. |
+| `npm run contract:compile` | Compile Solidity with pinned npm solc and OpenZeppelin; write `artifacts/TicketNFT.json`. |
+| `npm run deployment:check` | Read-only Sepolia contract/interface checks; writes `artifacts/sepolia-verification.json`. No transaction is sent. |
+| `npm run test:contract` | Real in-process Hardhat EVM: mint, duplicate rejection, transfers, callback rollback and reentry. No node needs to be running. |
+| `npm run test:frontend` | Wallet error/network handling and React interaction/state tests. |
+| `npm test` | Contract and frontend tests together. |
+| `npm run build` | Build the static frontend in `dist/`. |
+| `npm run preview` | Serve that build; requires deployment values set before building. |
+| `npm run test:e2e` | Real browser + local Hardhat execution, using a simulated wallet approval bridge. Requires `npm run chain` in another terminal. |
 
-## Architecture
+For the browser smoke test, install its browser once:
 
-```mermaid
-flowchart LR
-    User[Developer / user] --> UI["React UI<br/>src/App.jsx"]
-    UI --> Ethers["ethers.js<br/>ABI + contract address"]
-    Ethers --> MM["MetaMask<br/>provider + signer"]
-    MM <--> Network[Sepolia network]
-    Network <--> Contract["TicketNFT<br/>ERC-721 contract"]
-    UI -. transaction link .-> Explorer[Sepolia Etherscan]
-    Explorer <--> Network
+```powershell
+npx.cmd playwright install chromium
+npm.cmd run test:e2e
 ```
 
-There are only three application layers:
+Or use an already installed Chrome on Windows:
 
-1. **Contract:** `contracts/TicketNFT.sol` enforces one mint per wallet and owns the
-   canonical NFT state.
-2. **Connection code:** `src/contract.js` tells ethers which Sepolia address to use and
-   which contract functions exist.
-3. **Interface:** `src/App.jsx` asks MetaMask to connect, reads `hasMinted`, sends `mint`,
-   waits for confirmation, and displays an Etherscan link.
-
-A read such as `hasMinted(address)` travels through a **provider** and does not show a
-confirmation prompt. A write such as `mint()` needs a **signer**, opens MetaMask, consumes
-gas, and changes Sepolia state only after the transaction is mined.
-
-## Before you begin
-
-You need:
-
-- [MetaMask](https://metamask.io/download/) installed in a supported desktop browser;
-- [Remix IDE](https://remix.ethereum.org/) in the browser;
-- Node.js `20.19+` or `22.12+` and npm for the frontend; and
-- a small amount of Sepolia ETH. Choose a faucet from the official
-  [ethereum.org Sepolia faucet list](https://ethereum.org/developers/docs/networks/#sepolia).
-
-When using MetaMask, select or enable **Sepolia**. Its chain ID is `11155111` (hexadecimal
-`0xaa36a7`). Testnet ETH is only for learning and testing.
-
-## Part 1: Deploy the contract with Remix
-
-### 1. Add the Solidity file
-
-1. Open [Remix](https://remix.ethereum.org/).
-2. In **File Explorer**, create a file named `TicketNFT.sol`.
-3. Copy all contents of [`contracts/TicketNFT.sol`](contracts/TicketNFT.sol) into it.
-
-The import beginning with `@openzeppelin/contracts@5.6.1` uses a pinned release of
-OpenZeppelin's reusable ERC-721 implementation. Remix fetches the npm package when it
-compiles. Pinning the version ensures that every learner compiles the same dependency.
-
-### 2. Compile
-
-1. Open the **Solidity Compiler** plugin in Remix.
-2. Select compiler `0.8.30` or a newer `0.8.x` compiler compatible with
-   `pragma solidity ^0.8.30`.
-3. Make sure `TicketNFT.sol` is the active file.
-4. Click **Compile TicketNFT.sol**.
-
-`TicketNFT` should appear as a compiled contract. The OpenZeppelin contracts are library
-dependencies; you will deploy only `TicketNFT`.
-
-### 3. Connect Remix to Sepolia
-
-1. Open MetaMask, choose the account that has Sepolia ETH, and select **Sepolia**.
-2. In Remix, open **Deploy & Run Transactions**.
-3. For **Environment**, choose **Browser Extension** / **Injected Provider - MetaMask**
-   (the exact label can vary by Remix version).
-4. Approve the connection in MetaMask.
-5. Verify the network is Sepolia (`11155111`) and the Remix account matches MetaMask.
-6. Select `TicketNFT` in the **Contract** dropdown. Leave **Value** at `0`; the constructor
-   has no arguments and accepts no ETH.
-
-Do not deploy to **Remix VM** for this walkthrough. Remix VM is a temporary in-browser
-blockchain, so a contract deployed there is not available to the frontend on Sepolia.
-
-### 4. Deploy
-
-1. Click **Deploy**.
-2. Confirm the deployment transaction in MetaMask.
-3. Wait until Remix lists the instance under **Deployed Contracts**.
-4. Copy the address next to that deployed instance.
-
-It should look like a 42-character value beginning with `0x`. Copy the **contract address**,
-not any of these other values:
-
-- the wallet/account address that deployed it;
-- the deployment transaction hash; or
-- a token ID shown while interacting with the contract.
-
-Keep this Remix tab open if you want to expand the deployed contract and try read functions
-such as `name`, `symbol`, and `hasMinted` manually.
-
-## Part 2: Configure and run the frontend
-
-From the repository root:
-
-```bash
-npm install
-cp .env.example .env
+```powershell
+$env:PLAYWRIGHT_CHANNEL = 'chrome'
+npm.cmd run test:e2e
 ```
 
-Open `.env` and replace the placeholder with the deployed address copied from Remix:
+The smoke test starts its own Vite server at `127.0.0.1:5174`, deploys a fresh local
+test contract, and checks two wallets minting, actual NFT ownership, page reload,
+account switching and wrong-network recovery. It closes its browser/server when
+done and writes `artifacts/browser-smoke.json` plus a screenshot. Wallet approvals
+are **simulated** in this test; it does not prove the MetaMask extension or Sepolia
+workflow. It does not change `.env` or the `deploy:local` deployment record.
 
-```env
-VITE_CONTRACT_ADDRESS=0x1234567890abcdef1234567890abcdef12345678
-```
+## Sepolia manual acceptance checklist
 
-The address is public. The `VITE_` prefix tells Vite to include this value in browser code,
-which also means a Vite environment variable must never contain a private key, seed phrase,
-mnemonic, API secret, or other credential.
+- Connect wallet A and confirm the page reads the selected account and Sepolia.
+- Reject one mint request: the page should show rejection and allow retry.
+- Confirm the next request: check the receipt in Etherscan and token ownership.
+- Reload: wallet A remains already claimed without an automatic approval popup.
+- Switch to wallet B: its own eligibility appears; it can claim its own NFT.
+- Switch away from Sepolia: claiming is blocked until the correct network is selected.
+- Check a zero-ETH account: an insufficient-gas operation must not report success.
+- Optionally transfer wallet A's NFT using an ERC-721 interface: A remains ineligible,
+  although its held balance is now zero. Receiving an NFT does not consume B's own claim.
 
-Start the development server:
+Do not record these as passed until actually performed on the deployed Sepolia instance.
 
-```bash
-npm run dev
-```
-
-Open the local URL printed by Vite, usually `http://localhost:5173`. Restart the server after
-changing `.env`, because Vite reads environment variables when it starts.
-
-## Part 3: Connect MetaMask and mint
-
-1. Click **Connect MetaMask**.
-2. Choose an account in MetaMask and approve the connection. Connecting only shares the
-   selected public address; it does not send a transaction.
-3. Approve the request to switch to Sepolia if MetaMask displays one.
-4. Click **Mint Ticket**.
-5. Review and confirm the transaction in MetaMask. The contract charges no ticket price,
-   so the only cost is Sepolia gas.
-6. The page first shows the submitted transaction hash, then waits for a block confirmation.
-7. After confirmation, open **View transaction** to inspect the call and emitted events on
-   Sepolia Etherscan.
-
-The button then shows **Ticket already minted**. This rule is enforced by the smart contract,
-not just the React interface. Refreshing the page cannot bypass it. A person can still control
-multiple wallets, so “one per wallet” is not the same as “one per human.”
-
-## The mint flow in code
-
-Follow these files in order when reading the project:
-
-1. `connectWallet()` in `src/App.jsx` requests account access from MetaMask and asks it to
-   use Sepolia.
-2. `src/contract.js` supplies the deployed address and the small human-readable ABI.
-3. `refreshMintStatus()` creates an ethers `Contract` with a provider and reads the public
-   `hasMinted` mapping without a transaction.
-4. `mintTicket()` gets a signer, creates the same contract connection with write access,
-   calls `mint()`, and waits for the transaction receipt.
-5. `mint()` in `contracts/TicketNFT.sol` checks the mapping, chooses a token ID, records the
-   wallet, calls OpenZeppelin's `_safeMint`, and emits `Mint` (plus ERC-721's `Transfer`).
-
-Ethereum transactions are atomic: if any requirement or mint step fails, every state change
-from that call is reverted.
-
-## Project structure and file guide
+## How the pieces work
 
 ```text
-nft-ticket-dapp/
-├── contracts/
-│   └── TicketNFT.sol      # ERC-721 ticket rules and on-chain mint state
-├── src/
-│   ├── App.jsx            # MetaMask connection, read calls, mint transaction, and UI
-│   ├── contract.js        # Public contract address, minimal ABI, and Sepolia constants
-│   ├── main.jsx           # React entry point that mounts App
-│   └── styles.css         # Responsive styles for the single-page interface
-├── .env.example           # Safe template for local contract configuration
-├── .gitignore             # Excludes dependencies, builds, local env files, and OS files
-├── index.html             # HTML shell containing React's root element
-├── package.json           # npm scripts and direct JavaScript dependencies
-├── package-lock.json      # Exact dependency versions for reproducible npm installs
-└── README.md              # Learning guide, deployment steps, and architecture
+index.html -> src/main.jsx -> React App
+                                |
+                    contract.js (address, ABI, network)
+                                |
+                       wallet.js + ethers
+                                |
+                   browser wallet -> RPC node -> TicketNFT
 ```
 
-### Generated folders
+- `contracts/TicketNFT.sol`: ERC-721, sequential IDs starting at 1, `hasMinted`
+  mapping and the `Mint` event. Marks eligibility before a receiver callback; a
+  failed transaction rolls back all changes. There is no privileged admin path.
+- `src/contract.js`: public configuration and the ABI signatures used by the UI.
+  Sepolia is the default; only Sepolia and the local test chain are supported.
+- `src/wallet.js`: connection helpers, chain/account checks, contract existence
+  checks, reads, mint submission, receipt/replacement handling and useful error text.
+- `src/App.jsx`: connection UI, claim status, pending/confirmed transaction display
+  and subscriptions to wallet events. Late results from a previous wallet session
+  are ignored. Listeners are removed when the component is unmounted.
+- `src/main.jsx`: mounts React into the HTML root.
+- `scripts/`: local compilation, local-only deployment, local UI and browser checks.
 
-- `node_modules/` is created by `npm install`. Do not edit or commit it.
-- `dist/` is created by `npm run build`. It contains the deployable static site and is not
-  source code, so it is not committed.
-- `.env` is your local copy of `.env.example`. It is intentionally ignored by Git.
+The blockchain is the source of truth. There is no separate API server, database
+or local-storage claim flag. Refreshing the page cannot reset the contract rule.
+One wallet is not necessarily one person. The NFT currently has token IDs and
+ownership, but no hosted artwork/metadata; it may appear without an image in a wallet.
 
-## npm commands
+## Common problems
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start Vite's local development server with live reload. |
-| `npm run build` | Create an optimized static build in `dist/`. |
-| `npm run preview` | Serve the contents of `dist/` locally for a final check. |
+- **Setup needed:** supply the TicketNFT address in `.env`, then restart Vite.
+- **No contract exists:** wrong chain, wrong address, or a restarted local chain.
+- **Contract does not respond as TicketNFT:** the address points to another contract.
+- **Wallet not detected:** enable MetaMask and reload in the same browser profile.
+- **Wrong network:** use the explicit Switch button; cancelling leaves mint disabled.
+- **Request pending:** finish or cancel the existing MetaMask prompt.
+- **Confirmation timeout:** check the displayed hash and refresh status before retrying;
+  a timeout does not imply the on-chain transaction failed.
 
-For a clean dependency install that exactly follows `package-lock.json`, use `npm ci` instead
-of `npm install`.
+## References
 
-## Production build
+The production dependencies passed `npm audit --omit=dev` on 2026-11-05. The full
+development toolchain still has 5 audit findings through Hardhat/Zod and solc/tmp.
+Compatible Vite and transitive dependency fixes were applied. The remaining
+upstream fixes require incompatible tool/compiler changes; the solc SMT temporary
+file helper is not used by this project's compilation API. Keep local development
+servers on loopback, as the provided local scripts do. See `PROGRESS.md` for the
+verification record.
 
-```bash
-npm run build
-npm run preview
-```
-
-A hosting provider must receive `VITE_CONTRACT_ADDRESS` **before** running the build. Vite
-replaces the variable at build time; changing it after deployment does not change an existing
-bundle.
-
-## Troubleshooting
-
-### “Setup needed” or “Configure contract first”
-
-Check that `.env` exists in the project root, the variable is named exactly
-`VITE_CONTRACT_ADDRESS`, and its value is the deployed contract address. Then restart
-`npm run dev`.
-
-### MetaMask is not detected
-
-Install/enable the extension, unlock it, and reload the page. Open the DApp in the same desktop
-browser profile where MetaMask is installed.
-
-### MetaMask is on the wrong network
-
-Select Sepolia in MetaMask and try again. The frontend also calls
-`wallet_switchEthereumChain` with chain ID `0xaa36a7`.
-
-### “Insufficient funds”
-
-The selected account needs Sepolia ETH for deployment and mint gas. Test ETH must be on the
-Sepolia network, not another testnet.
-
-### The call reverts with “One ticket per wallet”
-
-That address has already minted from this deployed contract. Inspect
-`hasMinted(yourAddress)` in Remix or use another learning account.
-
-### A contract call fails even though the address looks valid
-
-Confirm that the address belongs to `TicketNFT` on **Sepolia**. The same address format is used
-on every EVM network, and accidentally pasting a wallet or a contract from another network
-will not work.
-
-### Remix cannot resolve the OpenZeppelin import
-
-Wait for the dependency download to finish and compile again. Confirm that the import line was
-copied exactly and that Remix has internet access.
-
-## Intentional design choices
-
-- **One contract and one React component:** easy to trace before learning frameworks such as
-  Hardhat, Foundry, or contract hooks.
-- **OpenZeppelin ERC-721:** avoids reimplementing a token standard while keeping the custom
-  mint rule visible.
-- **Minimal ABI:** teaches that the frontend only needs signatures it calls, not the entire
-  compiler artifact.
-- **No owner/admin role:** there are no privileged configuration or withdrawal functions.
-- **No mint price:** users pay only testnet gas.
-- **Checks before interaction:** `hasMinted` is updated before `_safeMint`; if minting fails,
-  the whole transaction reverts.
-- **No metadata/backend/database:** blockchain ownership is the only persisted application
-  state in this starter.
-
-## Secret safety
-
-This project never needs a private key in source code or environment files. MetaMask signs in
-its own extension and returns only public account/transaction data to the DApp.
-
-Before committing changes:
-
-```bash
-git status --short
-git diff --cached
-```
-
-Verify that `.env`, wallet export files, private keys, seed phrases, mnemonic phrases, and API
-credentials are absent. `VITE_*` values are always public because they are bundled into the
-frontend.
-
-## Further reading
-
-- [ERC-721 standard](https://eips.ethereum.org/EIPS/eip-721)
-- [OpenZeppelin ERC-721 documentation](https://docs.openzeppelin.com/contracts/5.x/api/token/erc721)
-- [Remix Solidity compiler](https://remix-ide.readthedocs.io/en/latest/compile.html)
-- [Remix Deploy & Run](https://remix-ide.readthedocs.io/en/latest/run.html)
+- [MetaMask provider API](https://docs.metamask.io/wallet/reference/provider-api/)
 - [ethers v6 providers](https://docs.ethers.org/v6/api/providers/)
-
-## Support the project
-
-If this beginner Web3 starter helped you, you can support future educational projects at:
-
-`0x3bfF60b4e21DBC63a2B83d82DFEA2fCB645fBAB3`
+- [OpenZeppelin ERC-721](https://docs.openzeppelin.com/contracts/5.x/api/token/erc721)
+- [Hardhat local node](https://hardhat.org/docs/guides/local-node)

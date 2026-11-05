@@ -5,8 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "node scripts/start-local-ui.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "contract:compile": "node scripts/compile-contract.mjs",
+    "deployment:check": "node scripts/check-deployment.mjs",
+    "test:contract": "node --test test/contracts/*.test.mjs",
+    "test:frontend": "vitest run",
+    "test:e2e": "node scripts/smoke-local.mjs",
+    "test": "npm run test:contract && npm run test:frontend",
+    "chain": "hardhat node --hostname 127.0.0.1",
+    "deploy:local": "node scripts/deploy-local.mjs"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   },
   "dependencies": {
     "ethers": "^6.15.0",
@@ -14,7 +26,14 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@openzeppelin/contracts": "5.6.1",
+    "@testing-library/react": "16.3.3",
     "@vitejs/plugin-react": "^4.7.0",
-    "vite": "^7.1.0"
+    "hardhat": "3.21.2",
+    "jsdom": "30.1.3",
+    "playwright": "1.64.1",
+    "solc": "0.8.30",
+    "vite": "^7.1.0",
+    "vitest": "5.1.0"
   }
 }
