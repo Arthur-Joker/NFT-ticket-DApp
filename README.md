@@ -8,6 +8,42 @@ Minting requires network gas even though the ticket itself has no price.
 This project implements the tutorial `TicketNFT` example with a complete wallet
 interaction flow and local development/test tooling.
 
+## Project origin and contribution classification
+
+This repository is adapted from
+[`jzjzzzzzzz/nft-ticket-dapp`](https://github.com/jzjzzzzzzz/nft-ticket-dapp),
+using upstream commit
+[`dce957b`](https://github.com/jzjzzzzzzz/nft-ticket-dapp/commit/dce957bd0c8298a6fccf40a1e1ec70429caf35f8)
+as the reference baseline. It is an extension of an existing starter, not an
+implementation written entirely from scratch. The original Git history is retained.
+
+| Classification | Origin or work in this version |
+| --- | --- |
+| Reused starter structure | The original repository supplied the React/Vite/ethers setup, HTML/React entry points, contract configuration, basic MetaMask connection/mint flow, and initial documentation. |
+| Reused NFT rules | ERC-721 inheritance, sequential token IDs, the `hasMinted` mapping, the `Mint` event and one claim per wallet were already present upstream. This version does not claim to have invented those rules or implemented ERC-721 from scratch. |
+| Adapted frontend and wallet workflow | Blockchain helpers were separated into `src/wallet.js`; account/network/contract validation, error handling, receipt/replacement handling, stale-result protection and displayed claim/balance state were expanded or refined. |
+| Adapted presentation and configuration | The interface was redesigned for clearer status feedback and responsive layouts; local-chain configuration and the public Sepolia deployment configuration were added or expanded. The displayed ticket graphic is illustrative. |
+| Added tooling and verification | Local Solidity compilation, local-only deployment/UI scripts, read-only Sepolia verification, frontend tests, actual-EVM contract tests, browser smoke tests and additional setup/progress documentation were added. |
+| Third-party implementations | OpenZeppelin supplies the ERC-721 implementation. React/React DOM, ethers, Vite, Hardhat, solc, Vitest, Testing Library/jsdom and Playwright supply their respective libraries and tools. Their authorship and applicable licenses remain separate from this project's adaptations. |
+
+### AI assistance and human contributions
+
+Code generation, refactoring, debugging, test creation, interface revisions and
+documentation were developed with AI assistance. The classifications above describe
+code origins and changes in this version; they do not assign work to individual
+students or claim sole human authorship. Actual team responsibilities and individual
+contributions should be described separately and accurately in the course report,
+following the course's reuse and AI-assistance rules.
+
+### Upstream license status
+
+No top-level `LICENSE` file was found in the checked upstream baseline, and GitHub
+did not report a detected repository-wide license when checked. The Solidity file
+contains an MIT SPDX header, but that should not be treated as a blanket license
+for every file. Preserve existing notices and confirm the applicable upstream or
+course permission for the intended reuse. This README does not relicense upstream
+material. See [GitHub's licensing guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository).
+
 ## Current deployment status
 
 The application is configured for the user's Sepolia TicketNFT deployment:
@@ -37,7 +73,7 @@ Run all commands from the repository root. On Windows PowerShell, use `npm.cmd`
 if execution policy prevents `npm.ps1` from running.
 
 ```powershell
-git clone https://github.com/jzjzzzzzzz/nft-ticket-dapp.git
+git clone https://github.com/Arthur-Joker/nft-ticket-dapp.git
 cd nft-ticket-dapp
 npm.cmd ci
 Copy-Item .env.example .env
