@@ -8,6 +8,8 @@ Minting requires network gas even though the ticket itself has no price.
 This project implements the tutorial `TicketNFT` example with a complete wallet
 interaction flow and local development/test tooling.
 
+**Website:** [NFT Ticket Claim](https://arthur-joker.github.io/NFT-ticket-DApp/)
+
 ## Project origin and contribution classification
 
 This repository is adapted from
@@ -61,6 +63,33 @@ feedback. On narrow screens, the primary action appears before the illustrative
 ticket. The illustration is a page graphic, not hosted NFT artwork. An in-app
 preview may have no wallet extension; open the same local URL in your MetaMask
 browser profile to connect and sign.
+
+## Website hosting on GitHub Pages
+
+The public frontend is hosted at
+[arthur-joker.github.io/NFT-ticket-DApp](https://arthur-joker.github.io/NFT-ticket-DApp/).
+Open it in a desktop browser with MetaMask, connect your wallet and select
+**Sepolia**. Claiming requires Sepolia test ETH for gas. Wallet connections to
+localhost and to the public website are separate approvals.
+
+`.github/workflows/pages.yml` tests and builds the app on every push to `main`,
+then deploys only the generated `dist/` files. It can also be run manually from
+the repository's **Actions** tab. The repository's **Settings → Pages → Source**
+must be **GitHub Actions**.
+
+The workflow supplies the public contract address and chain ID directly because
+the local `.env` is ignored by Git. To use a different contract, update
+`VITE_CONTRACT_ADDRESS` and `VITE_CHAIN_ID` in the workflow and update
+`.env.example` for local development. These values are included in the browser
+bundle; never put wallet secrets in `VITE_` variables.
+
+The workflow sets `VITE_BASE_PATH` to the repository's URL path. Local development
+keeps the default `/` path. If the repository is renamed or moved, check its new
+Pages URL and update the website links in this README.
+
+GitHub Pages hosts the frontend. The Solidity contract remains on Sepolia and
+transactions are signed by visitors in their own wallets. Website deployment
+does not redeploy the contract and needs no wallet private key.
 
 ## Requirements
 
