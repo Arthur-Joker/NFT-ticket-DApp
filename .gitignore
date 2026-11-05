@@ -9,3 +9,9 @@ coverage/
 !.env.example
 *.log
 .DS_Store
+
+# Personal workflow notes are kept outside the public project.
+/PROGRESS.md
+/GITHUB_PUBLISH.md
+/GITHUB_PUBLISH_GUIDE.md
+/GIT_DIFF_VIEWER_BACKUP*.txt

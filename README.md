@@ -23,7 +23,7 @@ implementation written entirely from scratch. The original Git history is retain
 | Reused NFT rules | ERC-721 inheritance, sequential token IDs, the `hasMinted` mapping, the `Mint` event and one claim per wallet were already present upstream. This version does not claim to have invented those rules or implemented ERC-721 from scratch. |
 | Adapted frontend and wallet workflow | Blockchain helpers were separated into `src/wallet.js`; account/network/contract validation, error handling, receipt/replacement handling, stale-result protection and displayed claim/balance state were expanded or refined. |
 | Adapted presentation and configuration | The interface was redesigned for clearer status feedback and responsive layouts; local-chain configuration and the public Sepolia deployment configuration were added or expanded. The displayed ticket graphic is illustrative. |
-| Added tooling and verification | Local Solidity compilation, local-only deployment/UI scripts, read-only Sepolia verification, frontend tests, actual-EVM contract tests, browser smoke tests and additional setup/progress documentation were added. |
+| Added tooling and verification | Local Solidity compilation, local-only deployment/UI scripts, read-only Sepolia verification, frontend tests, actual-EVM contract tests, browser smoke tests and additional setup documentation were added. |
 | Third-party implementations | OpenZeppelin supplies the ERC-721 implementation. React/React DOM, ethers, Vite, Hardhat, solc, Vitest, Testing Library/jsdom and Playwright supply their respective libraries and tools. Their authorship and applicable licenses remain separate from this project's adaptations. |
 
 ### AI assistance and human contributions
@@ -260,8 +260,8 @@ development toolchain still has 5 audit findings through Hardhat/Zod and solc/tm
 Compatible Vite and transitive dependency fixes were applied. The remaining
 upstream fixes require incompatible tool/compiler changes; the solc SMT temporary
 file helper is not used by this project's compilation API. Keep local development
-servers on loopback, as the provided local scripts do. See `PROGRESS.md` for the
-verification record.
+servers on loopback, as the provided local scripts do. Verification commands and
+their scope are documented above.
 
 - [MetaMask provider API](https://docs.metamask.io/wallet/reference/provider-api/)
 - [ethers v6 providers](https://docs.ethers.org/v6/api/providers/)
